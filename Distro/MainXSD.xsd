@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:simpleType name="NodeIdType">
+    <xsd:annotation>
+      <xsd:documentation>A non-empty string with length 8, 2 letters and 6 numbers.</xsd:documentation>
+    </xsd:annotation>
+    <xsd:restriction base="xsd:string">
+      <xsd:pattern value="[a-z]{2}[0-9]{6}"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+  <xsd:element name="Node">
+    <xsd:complexType>
+      <xsd:sequence>
+        <xsd:element name="NodeId" type="NodeIdType" maxOccurs="1" minOccurs="1" />
+        <xsd:element name="Timestamp" type="xsd:dateTime" maxOccurs="1" minOccurs="1" >
+          <xsd:annotation>
+            <xsd:documentation>TimeStamp of the moment the Node receive the request.</xsd:documentation>
+          </xsd:annotation>
+        </xsd:element>
+      </xsd:sequence>
+    </xsd:complexType>
+  </xsd:element>
+</xsd:schema>
