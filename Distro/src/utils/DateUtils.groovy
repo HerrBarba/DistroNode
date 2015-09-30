@@ -1,12 +1,12 @@
-package Main
+package utils
 
 import java.text.SimpleDateFormat;
 
-class Utils {	
+class DateUtils {	
 	static SimpleDateFormat format
 	
 	static {
-		format = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss")
+		format = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss,SSSX")
 		format.setTimeZone(TimeZone.getTimeZone("UTC"))
 	}
 	

@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+  <!-- Elemento raíz. -->
+  <xsd:element name="sdo2015">
+    <xsd:complexType>
+      <xsd:sequence>      
+
+        <xsd:element name="configuracion" type="configuracion" maxOccurs="1" minOccurs="0" />
+        <xsd:element name="emisor" type="emisor" maxOccurs="1" minOccurs="0" />
+        <xsd:element name="solicitud" type="solicitud" maxOccurs="1" minOccurs="0" />
+        <xsd:element name="respuesta" type="respuesta" maxOccurs="1" minOccurs="0" />
+
+      </xsd:sequence>
+    </xsd:complexType>
+  </xsd:element>
+
+  <xsd:simpleType name="expediente">
+    <xsd:restriction base="xsd:string">
+      <xsd:pattern value="[a-z]{2}[0-9]{6}"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+
+  <xsd:simpleType name="ip">
+    <xsd:restriction base="xsd:string">
+      <xsd:pattern value="(?:[0-9]{1,3}\.){3}[0-9]{1,3}"/>
+    </xsd:restriction>
+  </xsd:simpleType>
+
+  <xsd:simpleType name="tiempo" type="xsd:dateTime">
+    <!--
+      O bien, utilizar el formato ISO8601:2004.
+      No recuerdo cual de los dos escogieron.
+      -->
+  </xsd:simpleType>
+
+  <xsd:simpleType name="tipoDeMensaje">
+    <xsd:restriction base="xsd:string">
+      <xsd:enumeration value="solicitud" />
+      <xsd:enumeration value="respuesta" />
+    </xsd:restriction>
+  </xsd:simpleType>
+
+  <xsd:complexType name="configuracion">
+    <xsd:sequence>
+      <xsd:element name="id" type="expendiente" maxOccurs="1" minOccurs="1" />
+      <xsd:element name="tiempo" type="tiempo" maxOccurs="1" minOccurs="1" />
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="direccion">
+    <xsd:sequence>
+      <xsd:element name="ip" type="ip" maxOccurs="1" minOccurs="1" />
+      <xsd:element name="puerto" type="xsd:int" maxOccurs="1" minOccurs="1" />
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="emisor">
+    <xsd:sequence>
+      <xsd:element name="id" type="expendiente" maxOccurs="1" minOccurs="1" />
+      <xsd:element name="tiempo" type="tiempo" maxOccurs="1" minOccurs="1" />
+      <xsd:element name="direccion" type="direccion" maxOccurs="1" minOccurs="1" />
+      <xsd:element name="tipoDeMensaje" type="tipoDeMensaje" maxOccurs="1" minOccurs="1" />
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="ochoreinas">
+    <xsd:sequence>
+      <xsd:complexType name="posicion">
+        <xsd:attribute name="x" type="xsd:int" />
+        <xsd:attribute name="y" type="xsd:int" />
+      </xsd:complexType>
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="problema">
+    <xsd:sequence>
+      <xsd:element name="ochoreinas" type="ochoreinas" maxOccurs="1" minOccurs="0" />
+    </xsd:sequence>
+  </xsd:complexType>
+
+  <xsd:complexType name="respuesta">
+    <xsd:sequence>
+      <xsd:element name="archivo" type="xsd:string" maxOccurs="1" minOccurs="0" />
+      <xsd:element name="tiempo" type="tiempo" maxOccurs="1" minOccurs="1" />
+      <xsd:element name="ochoreinas" type="ochoreinas" maxOccurs="1" minOccurs="1" />
+    </xsd:sequence>
+    <xsd:attribute name="id" type="xsd:ID" />
+  </xsd:complexType>
+
+  <xsd:complexType name="solicitud">
+    <xsd:sequence>
+      <xsd:element name="archivo" type="xsd:string" maxOccurs="1" minOccurs="0" />
+      <xsd:element name="tiempo" type="xsd:string" maxOccurs="1" minOccurs="0" />
+      <xsd:element name="problema" type="xsd:problema" maxOccurs="1" minOccurs="0" />
+    </xsd:sequence>
+    <xsd:attribute name="id" type="xsd:ID" />
+  </xsd:complexType>
+
+</xsd:schema>
