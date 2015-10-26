@@ -2,21 +2,18 @@ package connection
 
 import utils.*
 
-class UdpClient {
+class UdpClient {	
 	
-	String ip = "localhost"
-	int port = 4444
-	
-	public void connect() {		
+	private void connect(String ip, int port, String message) {		
 		
 		byte[] sendData = new byte[1024]
 		byte[] receiveData = new byte[1024]
 		
+		// Initialize Socket
 		DatagramSocket clientSocket = new DatagramSocket()
 		InetAddress IPAddress = InetAddress.getByName(ip)
 		
-		def reqId = "A1"
-		String message = "<sdo2015><solicitud id=\"$reqId\"><tiempo/></solicitud></sdo2015>"
+		// Send message
 		sendData = message.getBytes()
 		
 		long start = System.nanoTime()
@@ -24,6 +21,7 @@ class UdpClient {
 		DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, IPAddress, port)
 		clientSocket.send(sendPacket)
 		
+		// Wait for response
 		DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length)
 		clientSocket.receive(receivePacket)
 		
@@ -32,12 +30,19 @@ class UdpClient {
 		long tExtra = (tRound - tMin) / 2
 		
 		String response = new String(receivePacket.getData()).trim()
+		
+		// Update 
 		//XmlUtils.validateMessage()
 		XmlUtils.parseMessage(response)
-		Clock.instance.startClock(XmlUtils.getResponseTime())
+		Clock.instance.startClock XmlUtils.getResponseTime()
 		Clock.instance.add tExtra
 		
-		println "FROM SERVER:" + XmlUtils.getResponseTime()
 		clientSocket.close()
+		Logger.instance.writeLog('UdpClient Time Request', message, response)
+	}
+	
+	public void unicast(String ip = 'localhost', int port = 4444, String reqId) {
+		String message = XmlUtils.createMessage(MessageType.TIME_REQUEST, reqId)
+		connect(ip, port, message)
 	}
 }

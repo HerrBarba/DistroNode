@@ -2,17 +2,17 @@ package utils
 
 @Singleton
 class Clock {
-	long origin
-	long offset
+	long origin // millis
+	long offset // nanos
 	
 	void startClock(String initialTime) {
 		origin = DateUtils.formatString2Date(initialTime).getTime()
 		offset = System.nanoTime()
 	}
 
-	void add(long time) {
+	void add(long/*nanos*/time) {
 		origin += toMillis(time)
-		offset += time
+		offset = System.nanoTime()
 	}
 		
 	String getTime() {

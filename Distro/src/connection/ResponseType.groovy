@@ -1,0 +1,9 @@
+package connection
+
+public enum ResponseType {
+	NODE_RESPONSE,
+	TIME_RESPONSE,
+	CONFIG_RESPONSE,
+	LEADER_RESPONSE,
+	STATE_RESPONSE
+}

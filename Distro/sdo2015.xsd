@@ -27,11 +27,7 @@
     </xsd:restriction>
   </xsd:simpleType>
 
-  <xsd:simpleType name="tiempo" type="xsd:dateTime">
-    <!--
-      O bien, utilizar el formato ISO8601:2004.
-      No recuerdo cual de los dos escogieron.
-      -->
+  <xsd:simpleType name="tiempo" type="ISO8601:2004">
   </xsd:simpleType>
 
   <xsd:simpleType name="tipoDeMensaje">
@@ -43,21 +39,29 @@
 
   <xsd:complexType name="configuracion">
     <xsd:sequence>
-      <xsd:element name="id" type="expendiente" maxOccurs="1" minOccurs="1" />
+      <xsd:element name="id" type="expediente" maxOccurs="1" minOccurs="1" />
+      <xsd:element name="capacidad" type="xsd:int" maxOccurs="1" minOccurs="1" />
       <xsd:element name="tiempo" type="tiempo" maxOccurs="1" minOccurs="1" />
+
+      <xsd:complexType name="posicion">
+        <xsd:attribute name="x" type="xsd:int" />
+        <xsd:attribute name="y" type="xsd:int" />
+      </xsd:complexType>
     </xsd:sequence>
   </xsd:complexType>
 
   <xsd:complexType name="direccion">
     <xsd:sequence>
+<!--  Multicast: 230.0.0.1  -->
       <xsd:element name="ip" type="ip" maxOccurs="1" minOccurs="1" />
+<!-- Puerto estándar TCP/UDP 4444 -->
       <xsd:element name="puerto" type="xsd:int" maxOccurs="1" minOccurs="1" />
     </xsd:sequence>
   </xsd:complexType>
 
   <xsd:complexType name="emisor">
     <xsd:sequence>
-      <xsd:element name="id" type="expendiente" maxOccurs="1" minOccurs="1" />
+      <xsd:element name="id" type="expediente" maxOccurs="1" minOccurs="1" />
       <xsd:element name="tiempo" type="tiempo" maxOccurs="1" minOccurs="1" />
       <xsd:element name="direccion" type="direccion" maxOccurs="1" minOccurs="1" />
       <xsd:element name="tipoDeMensaje" type="tipoDeMensaje" maxOccurs="1" minOccurs="1" />

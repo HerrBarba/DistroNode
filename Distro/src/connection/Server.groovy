@@ -1,12 +1,8 @@
 package connection
 
-import java.text.SimpleDateFormat
-import javax.xml.XMLConstants
-import javax.xml.transform.stream.StreamSource
-import javax.xml.validation.SchemaFactory
-
-import utils.Clock;
-import utils.DateUtils;
+import main.GlobalConfig
+import main.NodeConfig
+import utils.*
 
 @Singleton
 class Server {
@@ -19,14 +15,22 @@ class Server {
 		Thread.start {
 	        while (isEnabled) {
 	            server.accept { Socket socket ->
-	                println "Waiting for connection..."
+	                println "Starting connection..."
+					String message, response
+					MessageType type
+					
 	                socket.withStreams { InputStream input, OutputStream output ->
-	                    
-	                    // Send message
-	                    def now = Clock.instance.time
-	                    output << "<?xml version=\"1.0\" encoding=\"UTF-8\"?><sdo2015><emisor><expediente>is682778</expediente><tiempo>$now</tiempo><direccion><ip>127.0.0.1</ip><puerto>4444</puerto></direccion><tipoDeMensaje>respuesta</tipoDeMensaje></emisor></sdo2015>"
+						
+						// Read message
+						message = FileUtils.getContentFromReader(input.newReader())
+						
+	                    // Send response
+						response = processMessage(message)
+						output << response
 	                }
+
 	                println "Request complete."
+				    Logger.instance.writeLog("Server " + type, message, response)
 	            }
 	        }
 		}
@@ -34,5 +38,33 @@ class Server {
 	
 	public void disableTCP() {
 		isEnabled = false
+	}
+	
+	private String processMessage(String message) {
+		XmlUtils.parseMessage(message)
+		ResponseType type = XmlUtils.getResponseType()
+		
+		switch(type) {
+			case ResponseType.CONFIG_RESPONSE:
+				String id = XmlUtils.getSenderId()
+			    int x = XmlUtils.getNodePosX()
+			    int y = XmlUtils.getNodePosY()
+				String ip = XmlUtils.getSenderIp()
+				int techCap = XmlUtils.getSenderTechCap()
+				
+				GlobalConfig.instance.positions[x][y] = id
+				GlobalConfig.instance.nodes.put(id, [ip, techCap, x, y])
+				break
+				
+			case ResponseType.STATE_RESPONSE:
+				NodeConfig.instance.state.add(XmlUtils.getSenderId())
+				break
+				
+			case ResponseType.LEADER_RESPONSE:
+				NodeConfig.instance.leader = XmlUtils.getSenderId()
+				break
+		}
+		
+		return XmlUtils.createResponse(type)
 	}
 }

@@ -1,47 +1,39 @@
 package ui
 
-import groovy.swing.SwingBuilder
-import groovy.beans.Bindable
 import static javax.swing.JFrame.EXIT_ON_CLOSE
+import groovy.beans.Bindable
+import groovy.swing.SwingBuilder
+import groovy.swing.impl.TableLayout
+import groovy.swing.impl.TableLayoutCell
+
 import java.awt.*
-import javax.swing.JButton
+
 import javax.swing.JFileChooser
+import javax.swing.JLabel
+import javax.swing.JMenuBar
 import javax.swing.JTabbedPane
 
-import connection.*
-import utils.*
 import main.*
 import solver.*
+import utils.*
+import connection.*
 
 @Bindable
 class NodeReport {
-	String resources, problems, communication, organization, status
-	String toString() { "address[resources=$resources, problems=$problems, organization=$organization, communication=$communication, status=$status]" }
-}
-
-@Bindable
-class NodeTime {
-	String time
+	String problems, communication, status
+	String toString() { "address[problems=$problems, communication=$communication, status=$status]" }
 }
 
 class MainWindow {
 	def networkEnabled = true, resolutionEnabled = true
 	
 	def report = new NodeReport(
-		resources: 'Nothing', 
 		problems: '0', 
 		communication: 'No connections made',
-		organization: 'None',
 		status: 'Fine'
 		)
 	
-	def time = new NodeTime(time: Clock.instance.getTime())
-	
-	def swingBuilder = new SwingBuilder()
-	
-	def openXmlConfig = new JFileChooser(
-		dialogTitle: "Choose an XML file",
-		fileSelectionMode: JFileChooser.FILES_ONLY)		
+	def swingBuilder = new SwingBuilder()	
 	
 	public void startUI() {
 		swingBuilder.edt {  // edt method makes sure UI is build on Event Dispatch Thread.
@@ -51,69 +43,52 @@ class MainWindow {
 			defaultCloseOperation: EXIT_ON_CLOSE) {
 				borderLayout(vgap: 5)
 				
-				menuBar {
-					menu ('File', mnemonic: 'F') {
-						menuItem 'OpenConfig', mnemonic:'O', actionPerformed: {
-								int result = openXmlConfig.showOpenDialog()
-								if (result == JFileChooser.APPROVE_OPTION) {									
-									proccessFile(openXmlConfig.getSelectedFile())
-								}
-							}
-						menuItem 'Close'
-					}
-					menu('Connect', mnemonic: 'C') {
-						menuItem 'New'
-						menuItem 'Open'
-					}
-					menu('About', mnemonic: 'A') {
-						menuItem 'New'
-						menuItem 'Open'
-					}
-				}
+				createMenuBar()
 				
 				tabbedPane(id: 'tabs', tabLayoutPolicy:JTabbedPane.SCROLL_TAB_LAYOUT) {
 					panel(name: 'Reporting', constraints: BorderLayout.CENTER,
 							border: compoundBorder([emptyBorder(10)])) {
-						tableLayout {						
+						tableLayout {
 							tr {
-								td {
-									label 'Resources:'
-								}
-								td {
-									textArea report.resources, id: 'resources', columns: 30, rows: 4
-								}
+								td { label 'Tech Cap: ' }
+								td { label text:bind(source:NodeConfig.instance, 'techCap') }
 							}
 							tr {
-								td {
-									label 'Problems:'
-								}
-								td {
-									textArea report.problems, id: 'problems', columns: 30, rows: 4
-								}
+								td { label 'Water: ' }
+								td { label text:bind(source:NodeConfig.instance, 'water') }
+							}
+							tr { 
+								td { label 'Metal: ' }
+								td { label text:bind(source:NodeConfig.instance, 'metal') }
 							}
 							tr {
-								td {
-									label 'Communication:'
-								}
-								td {
-									textArea report.communication, id: 'communication', columns: 30, rows: 4
-								}
+								td { label 'Food: ' }
+								td { label text:bind(source:NodeConfig.instance, 'food') }
 							}
 							tr {
-								td {
-									label 'Organization:'
-								}
-								td {
-									textArea report.organization, id: 'organization', columns: 30, rows: 4
-								}
+								td { label 'Problems:' }
+								td { textArea report.problems, id: 'problems', columns: 30, rows: 4 }
 							}
 							tr {
-								td {
-									label 'General Status:'
-								}
-								td {
-									textArea report.status, id: 'status', columns: 30, rows: 4
-								}
+								td { label 'Communication:' }
+								td { textArea report.communication, id: 'communication', columns: 30, rows: 4 }
+							}
+							tr {
+								td { label 'General Status:' }
+								td { textArea report.status, id: 'status', columns: 30, rows: 4 }
+							}
+						}
+					}
+							
+					panel(name: 'Organization', constraints: BorderLayout.CENTER,
+							border: compoundBorder([emptyBorder(10)])) {
+						gridLayout(cols: 26, rows: 26)
+						(0..<26).each { x ->
+							(0..<26).each { y ->
+								label(text: GlobalConfig.instance.positions[x][y],
+									horizontalAlignment: JLabel.CENTER,
+									border: compoundBorder([lineBorder(color: Color.BLACK)]))
+									
 							}
 						}
 					}
@@ -122,40 +97,30 @@ class MainWindow {
 							border: compoundBorder([emptyBorder(10)])) {
 						tableLayout {
 							tr {
-								td {
-									label 'IP address:'
-								}
-								td {
-									textField '', id: 'ip', columns: 8
-								}
+								td { label 'IP address:' }
+								td { textField '', id: 'ip', columns: 8 }
 							}
 							tr {
-								td {
-									label 'Port number:'
-								}
-								td {
-									textField '', id: 'port', columns: 8
-								}
+								td { label 'Port number:' }
+								td { textField '', id: 'port', columns: 8 }
 							}
 							tr {
-								td {
-									label 'UDP:'
-								}
-								td {
-									button 'Connect', id: 'udp',
+								td { label 'UDP:' }
+								td { button 'Connect', id: 'udp',
 									actionPerformed: {
-										new UdpClient(ip: ip.text, port: Integer.parseInt(port.text)).connect()
+										new UdpClient().unicast(ip.text, Integer.parseInt(port.text), 'A1')
 									}
 								}
 							}
 							tr {
-								td {
-									label 'TCP:'
-								}
-								td {
-									button 'Connect', id: 'tcp',
+								td { label 'TCP:' }
+								td { button 'Connect', id: 'tcp',
 									actionPerformed: {
-										new Client(ip: ip.text, port: Integer.parseInt(port.text)).connect()
+										new Client().unicast(
+											ip.text, 
+											Integer.parseInt(port.text),
+											MessageType.NODE_REQUEST,
+											"NR-1")
 									}
 								}
 							}
@@ -166,11 +131,8 @@ class MainWindow {
 							border: compoundBorder([emptyBorder(10)])) {
 						tableLayout {
 							tr {
-								td {
-									label 'Network:'
-								}
-								td {
-									button 'Disable', id: 'network',
+								td { label 'Network:' }
+								td { button 'Disable', id: 'network',
 									actionPerformed: {
 										networkEnabled = !networkEnabled
 										if (networkEnabled) {
@@ -185,11 +147,8 @@ class MainWindow {
 								}
 							}
 							tr {
-								td {
-									label 'Problem resolution:'
-								}
-								td {
-									button 'Disable', id: 'resolution',
+								td { label 'Problem resolution:' }
+								td { button 'Disable', id: 'resolution',
 									actionPerformed: {
 										resolutionEnabled = !resolutionEnabled
 										resolution.text = (resolutionEnabled ? 'Disable' : 'Enable')
@@ -203,11 +162,8 @@ class MainWindow {
 							border: compoundBorder([emptyBorder(10)])) {
 						tableLayout {
 							tr {
-								td {
-									label '8 Queens:'
-								}
-								td {
-									button 'Solve', id: 'eightQ',
+								td { label '8 Queens:' }
+								td { button 'Solve', id: 'eightQ',
 									actionPerformed: {
 										new EightQueensSolver().findSolution()
 									}
@@ -216,13 +172,6 @@ class MainWindow {
 						}
 					}
 				}
-				// Binding of textfield's to address object.
-		//		bean report,
-		//		resources: bind { resources.text },
-		//		problems: bind { problems.text },
-		//		communication: bind { communication.text },
-		//		organization: bind { organization.text },
-		//		status: bind { status.text }				
 			}
 		}
 	}
@@ -238,5 +187,31 @@ class MainWindow {
 		NodeConfig.instance.id = XmlUtils.getNodeId()
 		Clock.instance.startClock(XmlUtils.getTimestamp())
 		println Clock.instance.getTime()
+	}
+	
+	private JMenuBar createMenuBar() {
+		def openXmlConfig = new JFileChooser(
+			dialogTitle: "Choose an XML file",
+			fileSelectionMode: JFileChooser.FILES_ONLY)
+		
+		return swingBuilder.menuBar {
+			menu ('File', mnemonic: 'F') {
+				menuItem 'OpenConfig', mnemonic:'O', actionPerformed: {
+						int result = openXmlConfig.showOpenDialog()
+						if (result == JFileChooser.APPROVE_OPTION) {
+							proccessFile(openXmlConfig.getSelectedFile())
+						}
+					}
+				menuItem 'Close'
+			}
+			menu('Connect', mnemonic: 'C') {
+				menuItem 'New'
+				menuItem 'Open'
+			}
+			menu('About', mnemonic: 'A') {
+				menuItem 'New'
+				menuItem 'Open'
+			}
+		}
 	}
 }

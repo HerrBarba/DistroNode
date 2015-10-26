@@ -1,8 +1,5 @@
 package connection
 
-import java.net.ServerSocket;
-
-import groovy.lang.Singleton;
 import utils.*
 
 @Singleton
@@ -17,24 +14,26 @@ class UdpServer {
 		byte[] sendData = new byte[1024]
 		
 		Thread.start {
-			while(isEnabled) { 
+			while(isEnabled) {
+	            println "Waiting for connection..."
+				
+				// Read message
 				DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length)  
 				server.receive(receivePacket)
 				
 				String message = new String(receivePacket.getData()).trim()
-				println "RECEIVED: " + message
-				
-				XmlUtils.parseMessage(message)
-				String resId = XmlUtils.getRequestId()
-				
+
+				// Send response
+				String response = XmlUtils.createResponse(message)
+				sendData = response.getBytes()
 				InetAddress ip = receivePacket.getAddress()
 				int port = receivePacket.getPort()
 				
-				def now = Clock.instance.time
-				String response = "<sdo2015><respuesta id=\"$resId\"><tiempo>$now</tiempo></respuesta></sdo2015>"
-				sendData = response.getBytes()
-				DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, ip, port)    
+				DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, ip, port)
 				server.send(sendPacket)
+
+				println "Request complete."
+				Logger.instance.writeLog('UdpServer Time Request', message, response)
 			}
 		}     
 	}

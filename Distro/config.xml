@@ -3,5 +3,6 @@
     <configuracion>        
 		<expediente>IS682778</expediente>
 		<tiempo>2015-09-23T09:10:00,45Z</tiempo>
+		<posicion y="10" x="5"/>
     </configuracion>
 </sdo2015>

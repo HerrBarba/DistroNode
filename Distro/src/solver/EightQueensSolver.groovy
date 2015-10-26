@@ -3,41 +3,40 @@ package solver
 import java.util.ArrayList
 import java.util.Arrays
 
+import utils.XmlUtils
+
 class EightQueensSolver {
 	
 	static int[] solution
 	
-	public void findSolution() {
+	public int[] findSolution(boolean doPrint = false) {
 		solution = new int[8]
 		ArrayList yValues = Arrays.asList( 0, 1, 2, 3, 4, 5, 6, 7 )
-		Collections.shuffle(yValues);
-		for (int x = 0; x < 8; x++){
-			if (solve(yValues.clone(), x)) {
-				solution[0] = x + 1
-				printSolution()
-				return;
-			}
+		Collections.shuffle(yValues)
+		solve(yValues, 0)
+		
+		if (doPrint) {
+			printSolution()
 		}
+		
+		return solution
 	}
 	
 	private void printSolution() {
-		String message = "<sdo2015><respuesta id=\"A1\"><ochoreinas><posicion x=\"0\" y=\"${solution[0]}\"/><posicion x=\"1\" y=\"${solution[1]}\"/><posicion x=\"2\" y=\"${solution[2]}\"/><posicion x=\"3\" y=\"${solution[3]}\"/><posicion x=\"4\" y=\"${solution[4]}\"/><posicion x=\"5\" y=\"${solution[5]}\"/><posicion x=\"6\" y=\"${solution[6]}\"/><posicion x=\"7\" y=\"${solution[7]}\"/></ochoreinas></respuesta></sdo2015>"
-		println message
+		println XmlUtils.createSolverMsgXml("A1", solution)
 	}
 	
 	boolean solve(ArrayList list, int currX) {
 		if (currX == 8) return true
-		ArrayList yValues = list.clone()
 		
-		for (int y: yValues.findAll { isDiagonalFree(it, currX) }) {
-			list.remove((Object) y)
+		for (int y: list.findAll { isDiagonalFree(it, currX) }) {			
+			ArrayList yValues = list.clone()
+			yValues.remove((Object) y)
 			solution[currX] = y;
-			if (solve(list, currX + 1)) {
-				solution[currX] = y;
+			if (solve(yValues, currX + 1)) {
 				return true
 			}
 		}
-		
 		return false
 	}
 	
