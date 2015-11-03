@@ -4,7 +4,7 @@ import utils.*
 
 class Client {
 	
-	private String connect(String ip, int port, MessageType type, String message) {		
+	private String connect(String ip, int port, String message) {		
 		def client = new Socket(ip, port)
 			
 		// Validate message
@@ -21,26 +21,23 @@ class Client {
 		}
 		
 		// Update log
-		Logger.instance.writeLog("Client " + type, message, response)
+		Logger.instance.writeLog("TCP Client Node Request", message, response)
 		return response		
 	}
 	
-	public void unicast(String ip = 'localhost', int port = 4444, MessageType type, String reqId) {
-		String message = XmlUtils.createMessage(type, reqId)
-		String response = connect(ip, port, type, message)
-		
-		
-		if (type == MessageType.NODE_REQUEST) {
-			// Parse response
-			XmlUtils.parseMessage(response)
-			String nodeId = XmlUtils.getSenderId()
-			String timestamp = XmlUtils.getSenderTimestamp()
-			println "Received message from: Node-($nodeId), Timestamp-($timestamp)."
+	public void unicast(String ip = 'localhost', int port = 4444, String reqId) {
+		String message = XmlUtils.createMessage(MessageType.NODE_REQUEST, reqId)
+		String response = connect(ip, port, message)
+				
+		// Parse response
+		try {
+			XmlUtils.parseResponse(response)
+		} catch (Exception e) {
+			e.printStackTrace()
+			return
 		}
+		String nodeId = XmlUtils.getSenderId()
+		String timestamp = XmlUtils.getSenderTimestamp()
+		println "Received message from: Node-($nodeId), Timestamp-($timestamp)."
 	}
-	
-    public void multicast(MessageType type) {
-		String message = XmlUtils.createMessage(type , "INIT")
-		String response = connect("230.0.0.1", 4444, type, message)
-    }
 }

@@ -15,7 +15,7 @@ class FileUtils {
 		}
 		
         return content.toString()
-    }    
+    }
     
     static String getContentFromFile(File file) {
 		return getContentFromReader(new BufferedReader(new FileReader(file)))

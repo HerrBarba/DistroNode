@@ -4,22 +4,57 @@ import main.GlobalConfig
 import main.NodeConfig
 import connection.Client
 import connection.MessageType
+import connection.UdpClient
 
 class StateChooser {
 	private StateChooser(){} // prevent instantiation
 	
 	public static void findState() {
 		Thread.start() {
-			while (NodeConfig.instance.state.size() < 3) {
+			if (NodeConfig.instance.status.equals(Status.UNDECIDED)) {				
+				ArrayList<String> found = new ArrayList(3)
 				for (int d = 1; d < 25; d++) {
-					findStateInDistance(d)			
-					if (NodeConfig.instance.state.size() == 5) return
+					findStateInDistance(d, found)
+					
+					if (found.size() >= 3) {						
+						NodeConfig.instance.status = Status.SEARCHING
+						break
+					}
+				}
+				
+				if (NodeConfig.instance.status.equals(Status.SEARCHING)) {
+					ArrayList<String> united = new ArrayList(3)
+					for (node in found) {						
+						String ip = GlobalConfig.instance.nodes.get(node).ip
+						UdpClient.unicast(ip, MessageType.JOIN_REQUEST, "S1")
+						
+						if (united.size() >= 3) {
+							NodeConfig.instance.status = Status.ORGANIZED
+							break
+						}
+					}
+					
+					if (NodeConfig.instance.status.equals(Status.ORGANIZED)) {
+						ArrayList<String> state = new ArrayList(3)
+						for (node in united) {
+							String ip = GlobalConfig.instance.nodes.get(node).ip
+							UdpClient.unicast(ip, MessageType.CONSOLIDATE_REQUEST, "S1")
+							
+							if (state.size() >= 3) {
+								NodeConfig.instance.status = Status.DECIDED
+								NodeConfig.instance.state = state
+								break
+							}
+						}
+						
+						
+					}
 				}
 			}
 		}
 	}
 	
-	private static void findStateInDistance(int d) {
+	private static void findStateInDistance(int d, List found) {
 		int x = NodeConfig.instance.x
 		int y = NodeConfig.instance.y
 		
@@ -31,10 +66,7 @@ class StateChooser {
 				
 				String id = GlobalConfig.instance.positions[x + dx][y + dy]
 				if (!id.equals("N/A")) {
-					if (NodeConfig.instance.state.size() == 5) return
-					
-					String ip = GlobalConfig.instance.nodes.get(id).ip
-					Client.unicast(ip, MessageType.STATE_REQUEST, "A1")
+					found.add(id)
 				}
 			}
 		}

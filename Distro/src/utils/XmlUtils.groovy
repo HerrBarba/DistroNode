@@ -40,13 +40,17 @@ class XmlUtils {
 		validator.validate(source)
 	}
 	
-	static void parseMessage(String message) {
+	static void parseMessage(String message) throws Exception {
 		rootNode = new XmlParser().parse(new StringReader(message))
+	}
+	
+	static void parseResponse(String response) throws Exception {
+		parseMessage(response)
 	}
 
 	// Node config
 	static String getNodeId() {
-		return node2String(rootNode.configuracion.expediente)
+		return node2String(rootNode.configuracion.id)
 	}
 	
 	static int getNodePosX() {
@@ -55,9 +59,12 @@ class XmlUtils {
 	
 	static int getNodePosY() {
 		return Integer.parseInt(rootNode.configuracion.posicion.getAt(0).attribute('y'))
-	}	
+	}
 	
-	//
+	static int getTechCap() {
+		return Integer.parseInt(node2String(rootNode.configuracion.capacidad))
+	}
+	
 	static String getTimestamp() {
 		return node2String(rootNode.configuracion.tiempo)
 	}
@@ -79,18 +86,14 @@ class XmlUtils {
 		return node2String(rootNode.emisor.direccion.puerto)
 	}
 	
-	static int getSenderTechCap() {
-		return Integer.parseInt(node2String(rootNode.emisor.capacidad))
-	}
 	
-	// Response info
+	// Response/Request info
+	static boolean isRequest() {
+		return rootNode.solicitud.isEmpty() == false
+	}
 	
 	static String getResponseId() {
 		return rootNode.respuesta.getAt(0).attribute('id')
-	}
-	
-	static String getResponseTime() {
-		return node2String(rootNode.respuesta.tiempo)
 	}
 	
 	static String getRequestId() {
@@ -122,28 +125,27 @@ class XmlUtils {
 		return sw.toString()
 	}
 	
-	static String createServerResponseXml(String ipAddr, String port) {
+	// ------------- NODE INFO --------------
+	public static String createNodeRequest(String reqId) {
 		def sw = new StringWriter()
 		def xml = new groovy.xml.MarkupBuilder(sw)
 		xml.sdo2015 {
 			emisor {
-				expediente NodeConfig.instance.id
+				id NodeConfig.instance.id
 				tiempo Clock.instance.time
 				direccion {
-					ip ipAddr
-					puerto port
+					ip NodeConfig.instance.ip
+					puerto NodeConfig.instance.port
 				}
-				tipoDeMensaje "respuesta"
+				tipoDeMensaje REQUEST
 			}
-			respuesta(id:resId) {
-				tiempo Clock.instance.time
-			}
+			solicitud(id:reqId, tipo:'tcp') {}
 		}
 
 		return sw.toString()
 	}
 	
-	static String createNodeResponse(String resId) {
+	public static String createNodeResponse(String resId) {
 		def sw = new StringWriter()
 		def xml = new groovy.xml.MarkupBuilder(sw)
 		xml.sdo2015 {
@@ -156,13 +158,33 @@ class XmlUtils {
 				}
 				tipoDeMensaje RESPONSE
 			}
-			respuesta(id:resId) {}
+			respuesta(id:resId, tipo:'tcp') {}
 		}
 
 		return sw.toString()
 	}
 	
-	static String createTimeResponse(String resId) {
+	// ------------- TIME --------------
+	public static String createTimeRequest(String reqId) {
+		def sw = new StringWriter()
+		def xml = new groovy.xml.MarkupBuilder(sw)
+		xml.sdo2015 {
+			emisor {
+				id NodeConfig.instance.id
+				tiempo Clock.instance.time
+				direccion {
+					ip NodeConfig.instance.ip
+					puerto NodeConfig.instance.port
+				}
+				tipoDeMensaje REQUEST
+			}
+			solicitud(id:reqId, tipo:'tiempo') {}
+		}
+
+		return sw.toString()
+	}
+		
+	public static String createTimeResponse(String resId) {
 		def sw = new StringWriter()
 		def xml = new groovy.xml.MarkupBuilder(sw)
 		xml.sdo2015 {
@@ -175,15 +197,14 @@ class XmlUtils {
 				}
 				tipoDeMensaje RESPONSE
 			}
-			respuesta(id:resId) {
-				tiempo Clock.instance.time
-			}
+			respuesta(id:resId, tipo:'tiempo') {}
 		}
 
 		return sw.toString()
 	}
 	
-	private static String createNodeRequest(String reqId) {
+	// ------------- CONFIG --------------
+	public static String createConfigRequest(String reqId) {
 		def sw = new StringWriter()
 		def xml = new groovy.xml.MarkupBuilder(sw)
 		xml.sdo2015 {
@@ -196,13 +217,45 @@ class XmlUtils {
 				}
 				tipoDeMensaje REQUEST
 			}
-			solicitud(id:reqId) {}
+			solicitud(id:reqId, tipo:'configuracion') {}
+			configuracion() {
+				id NodeConfig.instance.id
+				tiempo Clock.instance.time
+				posicion(x:NodeConfig.instance.x, y:NodeConfig.instance.y)
+				capacidad NodeConfig.instance.techCap
+			}
+		}
+
+		return sw.toString()
+	}
+
+	public static String createConfigResponse(String resId) {
+		def sw = new StringWriter()
+		def xml = new groovy.xml.MarkupBuilder(sw)
+		xml.sdo2015 {
+			emisor {
+				id NodeConfig.instance.id
+				tiempo Clock.instance.time
+				direccion {
+					ip NodeConfig.instance.ip
+					puerto NodeConfig.instance.port
+				}
+				tipoDeMensaje RESPONSE
+			}
+			respuesta(id:resId, tipo:'configuracion') {}			
+			configuracion() {
+				id NodeConfig.instance.id
+				tiempo Clock.instance.time
+				posicion(x:NodeConfig.instance.x, y:NodeConfig.instance.y)
+				capacidad NodeConfig.instance.techCap
+			}
 		}
 
 		return sw.toString()
 	}
 	
-	private static String createTimeRequest(String reqId) {
+	// ------------- STATE --------------
+	public static String createJoinStateRequest(String reqId) {
 		def sw = new StringWriter()
 		def xml = new groovy.xml.MarkupBuilder(sw)
 		xml.sdo2015 {
@@ -215,15 +268,32 @@ class XmlUtils {
 				}
 				tipoDeMensaje REQUEST
 			}
-			solicitud(id:reqId) {
-				tiempo()
+			solicitud(id:reqId, tipo:'unir') {}
+		}
+
+		return sw.toString()
+	}
+
+	public static String createJoinStateResponse(String resId) {
+		def sw = new StringWriter()
+		def xml = new groovy.xml.MarkupBuilder(sw)
+		xml.sdo2015 {
+			emisor {
+				id NodeConfig.instance.id
+				tiempo Clock.instance.time
+				direccion {
+					ip NodeConfig.instance.ip
+					puerto NodeConfig.instance.port
+				}
+				tipoDeMensaje RESPONSE
 			}
+			respuesta(id:resId, tipo:'unir') {}
 		}
 
 		return sw.toString()
 	}
 	
-	private static String createMulticastRequest(String reqId) {
+	public static String createConsolidateStateRequest(String reqId) {
 		def sw = new StringWriter()
 		def xml = new groovy.xml.MarkupBuilder(sw)
 		xml.sdo2015 {
@@ -236,51 +306,183 @@ class XmlUtils {
 				}
 				tipoDeMensaje REQUEST
 			}
-			solicitud(id:reqId) {}
+			solicitud(id:reqId, tipo:'consolidar') {}
+		}
+
+		return sw.toString()
+	}
+
+	public static String createConsolidateStateResponse(String resId) {
+		def sw = new StringWriter()
+		def xml = new groovy.xml.MarkupBuilder(sw)
+		xml.sdo2015 {
+			emisor {
+				id NodeConfig.instance.id
+				tiempo Clock.instance.time
+				direccion {
+					ip NodeConfig.instance.ip
+					puerto NodeConfig.instance.port
+				}
+				tipoDeMensaje RESPONSE
+			}
+			respuesta(id:resId, tipo:'consolidar') {}
 		}
 
 		return sw.toString()
 	}
 	
+	// ------------- LEADER --------------
+	public static String createLeaderRequest(String reqId) {
+		def sw = new StringWriter()
+		def xml = new groovy.xml.MarkupBuilder(sw)
+		xml.sdo2015 {
+			emisor {
+				id NodeConfig.instance.id
+				tiempo Clock.instance.time
+				direccion {
+					ip NodeConfig.instance.ip
+					puerto NodeConfig.instance.port
+				}
+				tipoDeMensaje REQUEST
+			}
+			solicitud(id:reqId, tipo:'lider') {}
+		}
+
+		return sw.toString()
+	}
+
+	public static String createLeaderResponse(String resId) {
+		def sw = new StringWriter()
+		def xml = new groovy.xml.MarkupBuilder(sw)
+		xml.sdo2015 {
+			emisor {
+				id NodeConfig.instance.id
+				tiempo Clock.instance.time
+				direccion {
+					ip NodeConfig.instance.ip
+					puerto NodeConfig.instance.port
+				}
+				tipoDeMensaje RESPONSE
+			}
+			respuesta(id:resId, tipo:'lider') {}
+		}
+
+		return sw.toString()
+	}
+	
+	// XML CONVENIENCE METHODS
 	public static String createMessage(MessageType type, String reqId) {
 		switch(type) {
 			case MessageType.NODE_REQUEST:
 				return createNodeRequest(reqId)
 			case MessageType.TIME_REQUEST:
 				return createTimeRequest(reqId)
-			case MessageType.CONFIG_MULTICAST:
-				return createMulticastRequest(reqId)
+			case MessageType.CONFIG_REQUEST:
+				return createConfigRequest(reqId)
+			case MessageType.JOIN_REQUEST:
+				return createJoinStateRequest(reqId)
+			case MessageType.CONSOLIDATE_REQUEST:
+				return createConsolidateStateRequest(reqId)
+			case MessageType.LEADER_REQUEST:
+				return createLeaderRequest(reqId)
 			default:
 				return ""
 		}
 	}
 	
 	public static String createResponse(message) {
-		parseMessage(message)		
-		createResponse(getResponseType())
+		try {
+			parseMessage(message)
+		} catch (Exception e) {
+			e.printStackTrace()
+			return ''
+		}				
+		createResponse(getResponseType(true))
 	}
-	
-	public static String createResponse(ResponseType type) {		
+			
+	public static String createResponse(ResponseType type, String resId = getRequestId()) {	
 		switch(type) {
 			case ResponseType.NODE_RESPONSE:
-				return createNodeResponse(getRequestId())
+				return createNodeResponse(resId)
 			case ResponseType.TIME_RESPONSE:
-				return createTimeResponse(getRequestId())
+				return createTimeResponse(resId)
 			case ResponseType.CONFIG_RESPONSE:
+				return createConfigResponse(resId)
+			case ResponseType.JOIN_RESPONSE:
+				return createJoinStateResponse(resId)
+			case ResponseType.CONSOLIDATE_RESPONSE:
+				return createConsolidateStateResponse(resId)
+			case ResponseType.LEADER_RESPONSE:
+				return createLeaderResponse(resId)
 			default:
 				return ""
 		}
 	}
 	
-	private static ResponseType getResponseType() {
-		if (!rootNode.solicitud.tiempo.isEmpty()) {
-			return ResponseType.TIME_RESPONSE
+	public static MessageType getMessageType() {
+		String type = rootNode.solicitud.getAt(0).attribute('tipo')
+				
+		switch(type) {
+			// Node
+			case 'tcp':
+				return MessageType.NODE_REQUEST
+				
+			// Time
+			case 'tiempo':
+				return MessageType.TIME_REQUEST
+			
+			// Config
+			case 'configuracion':
+				return MessageType.CONFIG_REQUEST
+				
+			// Join State
+			case 'unir':
+				return MessageType.JOIN_REQUEST
+				
+			// Consolidate State
+			case 'consolidar':
+				return MessageType.CONSOLIDATE_REQUEST
+			
+			// Leader
+			case 'lider':
+				return MessageType.LEADER_REQUEST
+				
+			default:
+				return MessageType.INVALID
 		}
-
-		if (getSenderIp() == "230.0.0.1") {
-			return ResponseType.CONFIG_RESPONSE
+	}
+	
+	public static ResponseType getResponseType(boolean willCreate = false) {
+		NodeList response = willCreate ? rootNode.solicitud : rootNode.respuesta
+		String type = response.getAt(0).attribute('tipo')
+		
+		switch(type) {
+			// Node
+			case 'tcp':
+				return ResponseType.NODE_RESPONSE
+				
+			// Time
+			case 'tiempo':
+			    return ResponseType.TIME_RESPONSE
+			
+			// Config
+			case 'configuracion':
+				return ResponseType.CONFIG_RESPONSE
+				
+			// Join State
+			case 'unir':
+				return ResponseType.JOIN_RESPONSE
+				
+			// Consolidate State
+			case 'consolidar':
+				return ResponseType.CONSOLIDATE_RESPONSE
+			
+			// Leader
+			case 'lider':
+				return ResponseType.LEADER_RESPONSE
+				
+			default:
+				return ResponseType.INVALID
 		}
-
-		return ResponseType.NODE_RESPONSE
 	}
 }

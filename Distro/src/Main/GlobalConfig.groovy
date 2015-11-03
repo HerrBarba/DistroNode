@@ -6,13 +6,14 @@ import groovy.beans.Bindable
 @Bindable
 class GlobalConfig {	
 	static final String MULTICAST_IP = '230.0.0.1'
-	final int port = 4444
+	static final int PORT = 4444
+	static final int TIMEOUT = 2000
 	String[][] positions = initPositions()
 	HashMap<String/*nodeId*/, Node> nodes = new HashMap<>()
 	
 	private String[][] initPositions() {		
 		String[][] positions = new String[26][26]
-		
+		positions[0][0] = ""
 		(1..<26).each { x ->
 			(1..<26).each { y ->
 				positions[x][y] = "N/A"

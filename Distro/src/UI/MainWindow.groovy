@@ -50,6 +50,10 @@ class MainWindow {
 							border: compoundBorder([emptyBorder(10)])) {
 						tableLayout {
 							tr {
+								td { label 'Leader: ' }
+								td { label text:bind(source:NodeConfig.instance, 'leader') }
+							}							
+							tr {
 								td { label 'Tech Cap: ' }
 								td { label text:bind(source:NodeConfig.instance, 'techCap') }
 							}
@@ -83,12 +87,13 @@ class MainWindow {
 					panel(name: 'Organization', constraints: BorderLayout.CENTER,
 							border: compoundBorder([emptyBorder(10)])) {
 						gridLayout(cols: 26, rows: 26)
-						(0..<26).each { x ->
-							(0..<26).each { y ->
-								label(text: GlobalConfig.instance.positions[x][y],
+						(0..<26).each { y ->
+							(0..<26).each { x ->
+								label(text:bind { GlobalConfig.instance.positions[x][y] },
+									//text:bind(source:GlobalConfig.instance, "positions[${x}][${y}]"),
+									//text:GlobalConfig.instance.positions[x][y],
 									horizontalAlignment: JLabel.CENTER,
-									border: compoundBorder([lineBorder(color: Color.BLACK)]))
-									
+									border: compoundBorder([lineBorder(color: Color.BLACK)]))									
 							}
 						}
 					}
@@ -108,7 +113,7 @@ class MainWindow {
 								td { label 'UDP:' }
 								td { button 'Connect', id: 'udp',
 									actionPerformed: {
-										new UdpClient().unicast(ip.text, Integer.parseInt(port.text), 'A1')
+										UdpClient.unicast(ip.text, Integer.parseInt(port.text), MessageType.TIME_REQUEST, 'A1')
 									}
 								}
 							}
@@ -116,11 +121,7 @@ class MainWindow {
 								td { label 'TCP:' }
 								td { button 'Connect', id: 'tcp',
 									actionPerformed: {
-										new Client().unicast(
-											ip.text, 
-											Integer.parseInt(port.text),
-											MessageType.NODE_REQUEST,
-											"NR-1")
+										new Client().unicast(ip.text, Integer.parseInt(port.text), "NR-1")
 									}
 								}
 							}
@@ -181,7 +182,12 @@ class MainWindow {
 		
 		// Validate and parse initial config
 		//XmlUtils.validateMessage(message)
-		XmlUtils.parseMessage(message)
+		try {
+			XmlUtils.parseMessage(message)
+		} catch (Exception e) {
+			e.printStackTrace()
+			return
+		}
 		
 		// Set initial config
 		NodeConfig.instance.id = XmlUtils.getNodeId()

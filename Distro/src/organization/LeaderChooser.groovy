@@ -2,8 +2,9 @@ package organization
 
 import main.GlobalConfig
 import main.NodeConfig
-import connection.Client
 import connection.MessageType
+import connection.ResponseType
+import connection.UdpClient
 
 
 class LeaderChooser {
@@ -11,19 +12,20 @@ class LeaderChooser {
 	
 	public static void pickLeader() {
 		Thread.start() {
-			boolean highest = true
-			NodeConfig.instance.state.each { nodeId ->
-				int techCap = GlobalConfig.instance.nodes.get(nodeId).techCap
-				if (techCap > NodeConfig.instance.techCap) {
-					highest = false					
-					String ip = GlobalConfig.instance.nodes.get(id).ip
-					Client.unicast(ip, MessageType.LEADER_REQUEST, "A1")
+			NodeConfig.instance.leader = ""
+			NodeConfig.instance.state.sort{	GlobalConfig.instance.nodes.get(it).get(1)
+			}.reverse().find { nodeId ->
+				println GlobalConfig.instance.nodes.get(nodeId).get(1)		
+				String ip = GlobalConfig.instance.nodes.get(nodeId).get(0)
+				
+				if (ip.equals(NodeConfig.instance.ip)) {
+					UdpClient.multicast(ResponseType.LEADER_RESPONSE, "L1")
+					NodeConfig.instance.leader = NodeConfig.instance.id
 				}
-			}
-			
-			if (highest) {
-				Client.multicast(MessageType.LEADER_REQUEST)
-				NodeConfig.instance.leader = NodeConfig.instance.id
+				
+				UdpClient.unicast(ip, 4444, MessageType.LEADER_REQUEST, "L1", false)
+				Thread.sleep(GlobalConfig.instance.TIMEOUT)
+				return !NodeConfig.instance.leader.equals("")
 			}
 		}
 	}
