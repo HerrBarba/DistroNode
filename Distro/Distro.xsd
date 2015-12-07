@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema targetNamespace="http://localhost:4444/sdo2015/schema"
+    xmlns="http://localhost:4444/sdo2015/schema Distro.xsd"
+    xmlns:tns="http://localhost:4444/sdo2015/schema"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+    <xs:simpleType name="expediente">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[a-z]{2}[0-9]{6}"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:complexType name="ArrayOfRecords">
+        <xs:sequence>
+            <xs:element name='record' type='tns:expediente' maxOccurs='unbounded'/>
+        </xs:sequence>
+    </xs:complexType>
+</xs:schema>

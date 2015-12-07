@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<definitions name="Sdo2015Service"
+        targetNamespace="http://localhost:4444/sdo2015"
+        xmlns:tns="http://localhost:4444/sdo2015"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+        xmlns:xsd1="http://localhost:4444/sdo2015/schema"
+        xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+        xmlns="http://schemas.xmlsoap.org/wsdl/">
+
+    <types>
+        <schema xmlns="http://www.w3.org/2001/XMLSchema">
+            <import namespace="http://localhost:4444/sdo2015/schema" schemaLocation="Distro.xsd"/>
+        </schema>
+    </types>
+
+    <!-- JOIN DEFINITION -->
+    <message name="WannaJoin">
+        <part name="joinedNodes" type="xsd1:ArrayOfRecords"/>
+    </message>
+
+    <message name="WannaJoinResponse">
+        <part name="joinResponse" type="xsd:boolean"/>
+    </message>
+
+    <!-- CONSOLIDATION MESSAGES -->
+    <message name="Consolidate">
+        <part name="newState" type="xsd1:ArrayOfRecords"/>
+    </message>
+
+    <message name="ConsolidateResponse">
+        <part name="consolidationResponse" type="xsd:boolean"/>
+    </message>
+
+    <!-- CONSOLIDATION MESSAGES -->
+    <message name="ConfirmState">
+        <part name="finalState" type="xsd1:ArrayOfRecords"/>
+    </message>
+
+    <message name="ConfirmStateResponse">
+    </message>
+
+    <!-- LEADER MESSAGES -->
+    <message name="Leader">
+    </message>
+
+    <message name="LeaderResponse">
+        <part name="leaderResponse" type="xsd:boolean"/>
+    </message>
+
+    <!-- PORT TYPE -->
+    <portType name="Sdo2015PortType">
+        <operation name="WannaJoin">
+            <input message="tns:WannaJoin"/>
+            <output message="tns:WannaJoinResponse"/>
+        </operation>
+        <operation name="Consolidate">
+            <input message="tns:Consolidate"/>
+            <output message="tns:ConsolidateResponse"/>
+        </operation>
+        <operation name="ConfirmState">
+            <input message="tns:ConfirmState"/>
+            <output message="tns:ConfirmStateResponse"/>
+        </operation>
+        <operation name="Leader">
+            <input message="tns:Leader"/>
+            <output message="tns:LeaderResponse"/>
+        </operation>
+    </portType>
+
+    <!-- BINDING -->
+    <binding name="Sdo2015PortBinding" type="tns:Sdo2015PortType">
+        
+        <soap:binding style="rpc" transport="http://schemas.xmlsoap.org/soap/http"/>
+        <operation name="WannaJoin">
+            <soap:operation soapAction=""/>
+            <input>
+                <soap:body use="literal" namespace="http://localhost:4444/sdo2015"/>
+            </input>
+            <output>
+                <soap:body use="literal" namespace="http://localhost:4444/sdo2015"/>
+            </output>
+        </operation>
+        
+        <operation name="Consolidate">
+            <soap:operation soapAction=""/>
+            <input>
+                <soap:body use="literal" namespace="http://localhost:4444/sdo2015"/>
+            </input>
+            <output>
+                <soap:body use="literal" namespace="http://localhost:4444/sdo2015"/>
+            </output>
+        </operation>
+        
+        <operation name="ConfirmState">
+            <soap:operation soapAction=""/>
+            <input>
+                <soap:body use="literal" namespace="http://localhost:4444/sdo2015"/>
+            </input>
+            <output>
+                <soap:body use="literal" namespace="http://localhost:4444/sdo2015"/>
+            </output>
+        </operation>
+        
+        <operation name="Leader">
+            <soap:operation soapAction=""/>
+            <input>
+                <soap:body use="literal" namespace="http://localhost:4444/sdo2015"/>
+            </input>
+            <output>
+                <soap:body use="literal" namespace="http://localhost:4444/sdo2015"/>
+            </output>
+        </operation>
+
+    </binding>
+
+    <!-- SERVICE -->
+    <service name="Sdo2015Service">
+        <documentation>SDO 2015 Service</documentation>
+        <port name="Sdo2015Port" binding="tns:Sdo2015PortBinding">
+            <soap:address location="http://localhost:4444/sdo2015"/>
+        </port>
+    </service>
+</definitions>

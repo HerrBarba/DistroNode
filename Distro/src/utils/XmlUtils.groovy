@@ -50,7 +50,7 @@ class XmlUtils {
 
 	// Node config
 	static String getNodeId() {
-		return node2String(rootNode.configuracion.id)
+		return node2String(rootNode.configuracion.expediente)
 	}
 	
 	static int getNodePosX() {

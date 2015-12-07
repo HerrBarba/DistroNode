@@ -1,12 +1,14 @@
 package main
 
 import organization.LeaderChooser
+import organization.StateChooser
 
 import solver.MasterSolver
 import ui.MainWindow
 import utils.Clock
 import utils.FileUtils
 import utils.XmlUtils
+import webapp.Sdo2015Publisher
 import connection.*
 
 class Main {
@@ -48,10 +50,10 @@ class Main {
 
 		// Start problem solvers
 		MasterSolver.instance.startSolving()
-		//NetworkInterface.getNetworkInterfaces().each { println it.getName() };
-		//NetworkInterface.getByName('wlan0').getInetAddresses().each{ println it.getHostAddress()}
-		Thread.start { 
-			while(GlobalConfig.instance.nodes.size() < 2 ); 
+		Sdo2015Publisher.startWebService()
+		
+		Thread.start {
+			StateChooser.findState()
 			LeaderChooser.pickLeader()
 		}
 	} 
